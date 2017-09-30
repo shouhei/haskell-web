@@ -88,8 +88,11 @@ response :: Socket -> String -> IO()
 response conn request = do
   let method = getRequestMethod request
   let path = getRequestPath request
-  body <- readFile path
   zt <- getZonedTime
+  let logDate = formatTime defaultTimeLocale "[%d/%b/%Y %H:%M:%S]" zt
+  let firstLine = init $ (lines request) !! 0
+  putStrLn $ firstLine ++ " " ++ logDate
+  body <- readFile path
   let today = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S +0900" zt
   let c = getContentType path
   send conn $ addHeader today c body
