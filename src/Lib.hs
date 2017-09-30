@@ -43,6 +43,9 @@ receiveRequestLoop conn = do
   `catch` (\(SomeException e) -> return ())
   `finally` close conn
 
+getServer :: String
+getServer = "haskell-web"
+
 getRequestMethod :: String -> String
 getRequestMethod request = do
   (words $ head $ lines request) !! 0
@@ -53,12 +56,17 @@ getRequestPath request = do
 
 notFound :: String -> String
 notFound d = do
-  "HTTP/1.0 404 Not Found\n" ++ "Accept-Ranges: bytes\nContent-Length: 0\n" ++ "Content-Type: text/plan;\n" ++ "Date: " ++ d ++ "\n\n"
+  "HTTP/1.0 404 Not Found\n\
+  \Server:" ++  getServer ++"\n\
+  \Accept-Ranges: bytes\nContent-Length: 0\n\
+  \Content-Type: text/plan;\n\
+  \Date: " ++ d ++ "\n\n"
 
 addHeader :: String -> String -> String -> String
 addHeader d c body = do
   let content_length = length body
   "HTTP/1.0 200 Ok \n\
+  \Server:" ++  getServer ++"\n\
   \Content-Type: " ++ c ++ "\n\
   \Content-length: " ++ (show content_length) ++ "\n\
   \Date: " ++ d ++ "\n\
