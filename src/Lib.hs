@@ -7,12 +7,15 @@ module Lib
 where
 
 import Network.Socket
+import qualified Network.Socket.ByteString as NBS
 import Control.Concurrent
 import Control.Monad
 import Control.Exception
 import Data.IORef
 import Data.Time
 import Data.List.Split
+import qualified Data.ByteString.Char8 as BS
+import System.IO
 
 serveSocket :: Int -> IO Socket
 serveSocket port_int = do
@@ -56,21 +59,21 @@ getRequestPath request = do
 
 notFound :: String -> String
 notFound d = do
-  "HTTP/1.0 404 Not Found\n\
-  \Server:" ++  getServer ++"\n\
-  \Accept-Ranges: bytes\nContent-Length: 0\n\
-  \Content-Type: text/plan;\n\
-  \Date: " ++ d ++ "\n\n"
+  "HTTP/1.0 404 Not Found \r\n\
+  \Server: " ++  getServer ++" \r\n\
+  \Accept-Ranges: bytes\nContent-Length: 0 \r\n\
+  \Content-Type: text/plan; \r\n\
+  \Date: " ++ d ++ "\r\n\n"
 
 addHeader :: String -> String -> String -> String
 addHeader d c body = do
   let content_length = length body
-  "HTTP/1.0 200 Ok \n\
-  \Server:" ++  getServer ++"\n\
-  \Content-Type: " ++ c ++ "\n\
-  \Content-length: " ++ (show content_length) ++ "\n\
-  \Date: " ++ d ++ "\n\
-  \\n\n" ++ body
+  "HTTP/1.0 200 Ok \r\n\
+  \Server:" ++  getServer ++" \r\n\
+  \Content-Type: " ++ c ++ " \r\n\
+  \Content-length: " ++ (show content_length) ++ "\r\n\
+  \Date: " ++ d ++ "\r\n\
+  \\r\n" ++ body
 
 getContentType :: String -> String
 getContentType file = do
@@ -81,8 +84,40 @@ getContentType file = do
     "text/css;charset=utf-8"
   else if extention == "js" then
     "application/x-javascript"
+  else if extention == "gif" then
+    "image/gif"
+  else if extention == "jpg" || extention == "jpeg" then
+    "image/jpeg"
+  else if extention == "png" then
+    "image/png"
   else
     "text/plain"
+
+
+getFileHandler file = do
+  let extention = (splitOn "." file) !! 1
+  if extention == "html" then
+    openFile
+  else if extention == "css" then
+    openFile
+  else if extention == "js" then
+    openFile
+  else if extention == "gif" then
+    openBinaryFile
+  else if extention == "jpg" || extention == "jpeg" then
+    openBinaryFile
+  else if extention == "png" then
+    openBinaryFile
+  else
+    openFile
+
+sendAllData :: Socket -> BS.ByteString -> IO()
+sendAllData conn content
+  | (BS.length content) == 0 = close conn
+  | otherwise = do
+      send_data <- NBS.send conn content
+      let remaining_content = BS.drop send_data content
+      sendAllData conn remaining_content
 
 response :: Socket -> String -> IO()
 response conn request = do
@@ -92,20 +127,22 @@ response conn request = do
   let logDate = formatTime defaultTimeLocale "[%d/%b/%Y %H:%M:%S]" zt
   let firstLine = init $ (lines request) !! 0
   putStrLn $ firstLine ++ " " ++ logDate
-  body <- readFile path
+  let f = getFileHandler path
+  handler <- f path ReadMode
+  contents <- hGetContents handler
   let today = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S +0900" zt
   let c = getContentType path
-  send conn $ addHeader today c body
-  _ <- close conn
+  let response_data = addHeader today c contents
+  sendAllData conn (BS.pack response_data)
   return ()
   `catch` (\(SomeException e) -> do
+    print e
     zt <- getZonedTime
     let today = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S +0900" zt
-    send conn $ notFound today
+    sendAllData conn (BS.pack (notFound today))
     return ()
    )
   `finally` (do
-    _ <- close conn
     return ()
   )
 
