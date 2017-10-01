@@ -20,6 +20,6 @@ cabal.project.local
 .HTF/
 .ghc.environment.*
 .DS_Store
-*_flaymake.hs
+**/*_flymake.hs
 index.html
 static/
