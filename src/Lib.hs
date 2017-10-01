@@ -61,7 +61,7 @@ notFound :: String -> String
 notFound d = do
   "HTTP/1.0 404 Not Found \r\n\
   \Server: " ++  getServer ++" \r\n\
-  \Accept-Ranges: bytes\nContent-Length: 0 \r\n\
+  \Accept-Ranges: bytes \r\nContent-Length: 0 \r\n\
   \Content-Type: text/plan; \r\n\
   \Date: " ++ d ++ "\r\n\n"
 
@@ -70,6 +70,7 @@ addHeader d c body = do
   let content_length = length body
   "HTTP/1.0 200 Ok \r\n\
   \Server:" ++  getServer ++" \r\n\
+  \Accept-Ranges: bytes \r\n\
   \Content-Type: " ++ c ++ " \r\n\
   \Content-length: " ++ (show content_length) ++ "\r\n\
   \Date: " ++ d ++ "\r\n\
