@@ -57,24 +57,73 @@ getRequestPath :: String -> String
 getRequestPath request = do
   tail $ (words $ head $ lines request) !! 1
 
+makeHeader :: [(String, String)] -> String
+makeHeader kv = do
+  foldl (\x y -> x ++ (fst y) ++ ": " ++ (snd y) ++ " \r\n") "" kv
+
+getReasonPhrase :: Int -> String
+getReasonPhrase x
+  | x == 200  = "OK"
+  | x == 201  = "Created"
+  | x == 202  = "Accepted"
+  | x == 203  = "Provisional Information"
+  | x == 204  = "No Response"
+  | x == 205  = "Deleted"
+  | x == 206  = "Modified"
+  | x == 301  = "Moved Permanently"
+  | x == 302  = "Moved Temporarily"
+  | x == 303  = "Method"
+  | x == 304  = "Not Modified"
+  | x == 400  = "Bad Request"
+  | x == 401  = "Unauthorized"
+  | x == 402  = "Payment Required"
+  | x == 403  = "Forbidden"
+  | x == 404  = "Not Found"
+  | x == 405  = "Method Not Allowed"
+  | x == 406  = "None Acceptable"
+  | x == 407  = "Proxy Authentication Required"
+  | x == 408  = "Request Timeout"
+  | x == 500  = "Internal Server Error"
+  | x == 501  = "Not Implemented"
+  | x == 502  = "Bad Gateway"
+  | x == 503  = "Service Unavailable"
+  | x == 504  = "Gateway Timeout"
+  | otherwise = ""
+
+makeStatusLine :: Float -> Int -> String
+makeStatusLine http_version status_code = do
+  "HTTP/" ++ (show http_version) ++ " " ++ (show status_code) ++ " " ++ (getReasonPhrase status_code)
+
 notFound :: String -> String
 notFound d = do
-  "HTTP/1.0 404 Not Found \r\n\
-  \Server: " ++  getServer ++" \r\n\
-  \Accept-Ranges: bytes \r\nContent-Length: 0 \r\n\
-  \Content-Type: text/plan; \r\n\
-  \Date: " ++ d ++ "\r\n\n"
+  let kv =  [
+        {--General Header--}
+        ("Date", d),
+        {--Response Header--}
+        ("Server", getServer),
+        ("Accept-Ranges", "bytes"),
+        {-- Object Header--}
+        ("Content-Length", "0"),
+        ("Content-Type", "text/plan;")
+        ]
+  {-- Status Line --}
+  (makeStatusLine 1.0 404) ++ " \r\n" ++ (makeHeader kv) ++ "\n"
 
 addHeader :: String -> String -> String -> String
 addHeader d c body = do
   let content_length = length body
-  "HTTP/1.0 200 Ok \r\n\
-  \Server:" ++  getServer ++" \r\n\
-  \Accept-Ranges: bytes \r\n\
-  \Content-Type: " ++ c ++ " \r\n\
-  \Content-length: " ++ (show content_length) ++ "\r\n\
-  \Date: " ++ d ++ "\r\n\
-  \\r\n" ++ body
+  let kv = [
+        {--General Header --}
+        ("Date", d),
+        {-- Response Header --}
+        ("Server", getServer),
+        ("Accept-Ranges", "bytes"),
+        {-- Object Header --}
+        ("Content-Type", c),
+        ("Content-length", (show content_length))
+        ]
+  {--Status Line--}
+  (makeStatusLine 1.0 200) ++ " \r\n" ++ (makeHeader kv) ++ "\r\n" ++ body
 
 getContentType :: String -> String
 getContentType file = do
