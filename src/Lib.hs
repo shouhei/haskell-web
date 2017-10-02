@@ -136,24 +136,6 @@ getContentType file
   | otherwise                                 = "text/plain"
   where extention = (splitOn "." file) !! 1
 
-
-getFileHandler file = do
-  let extention = (splitOn "." file) !! 1
-  if extention == "html" then
-    openFile
-  else if extention == "css" then
-    openFile
-  else if extention == "js" then
-    openFile
-  else if extention == "gif" then
-    openBinaryFile
-  else if extention == "jpg" || extention == "jpeg" then
-    openBinaryFile
-  else if extention == "png" then
-    openBinaryFile
-  else
-    openFile
-
 sendAllData :: Socket -> BS.ByteString -> IO()
 sendAllData conn content
   | (BS.length content) == 0 = close conn
@@ -170,8 +152,7 @@ response conn request = do
   let logDate = formatTime defaultTimeLocale "[%d/%b/%Y %H:%M:%S]" zt
   let firstLine = init $ (lines request) !! 0
   putStrLn $ firstLine ++ " " ++ logDate
-  let f = getFileHandler path
-  handler <- f path ReadMode
+  handler <- openBinaryFile path ReadMode
   contents <- hGetContents handler
   let today = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S +0900" zt
   let c = getContentType path
