@@ -126,22 +126,15 @@ addHeader d c body = do
   (makeStatusLine 1.0 200) ++ " \r\n" ++ (makeHeader kv) ++ "\r\n" ++ body
 
 getContentType :: String -> String
-getContentType file = do
-  let extention = (splitOn "." file) !! 1
-  if extention == "html" then
-    "text/html;charset=utf-8"
-  else if extention == "css" then
-    "text/css;charset=utf-8"
-  else if extention == "js" then
-    "application/x-javascript"
-  else if extention == "gif" then
-    "image/gif"
-  else if extention == "jpg" || extention == "jpeg" then
-    "image/jpeg"
-  else if extention == "png" then
-    "image/png"
-  else
-    "text/plain"
+getContentType file
+  | extention == "html"                       = "text/html;charset=utf-8"
+  | extention == "css"                        = "text/css;charset=utf-8"
+  | extention == "js"                         = "application/x-javascript"
+  | extention == "gif"                        = "image/gif"
+  | extention == "jpg" || extention == "jpeg" = "image/jpeg"
+  | extention == "png"                        = "image/png"
+  | otherwise                                 = "text/plain"
+  where extention = (splitOn "." file) !! 1
 
 
 getFileHandler file = do
