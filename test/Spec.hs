@@ -18,7 +18,15 @@ specGetRequestMethod = do
     it "standard" $
       (getRequestMethod exampleRequestHeader) `shouldBe` "GET"
 
+specGetRequestPath :: Spec
+specGetRequestPath = do
+  describe "getRequestPath" $ do
+    it "standard" $
+      (getRequestPath exampleRequestHeader) `shouldBe` "hogehoge"
+
+
 main :: IO ()
 main = hspec $ do
   specGetServer
   specGetRequestMethod
+  specGetRequestPath
