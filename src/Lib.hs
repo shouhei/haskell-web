@@ -3,6 +3,15 @@ module Lib
     serveSocket,
     acceptLoop,
     receiveRequestLoop,
+    getServer,
+    getRequestMethod,
+    getRequestPath,
+    makeHeader,
+    getReasonPhrase,
+    makeStatusLine,
+    getContentType,
+    notFound,
+    addHeader
   )
 where
 
