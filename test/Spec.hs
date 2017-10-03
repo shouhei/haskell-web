@@ -1,6 +1,16 @@
 import Lib
 import Test.Hspec
 
+{--
+    makeHeader,
+    getReasonPhrase,
+    makeStatusLine,
+    getContentType,
+    notFound,
+    addHeader
+
+--}
+
 specGetServer :: Spec
 specGetServer = do
   describe "getServer" $ do
@@ -24,9 +34,66 @@ specGetRequestPath = do
     it "standard" $
       (getRequestPath exampleRequestHeader) `shouldBe` "hogehoge"
 
+specGetReasonPhrase :: Spec
+specGetReasonPhrase = do
+  describe "getReasonPhrase" $ do
+    it "200" $
+      (getReasonPhrase 200) `shouldBe` "OK"
+    it "201" $
+      (getReasonPhrase 201) `shouldBe` "Created"
+    it "202" $
+      (getReasonPhrase 202) `shouldBe` "Accepted"
+    it "203" $
+      (getReasonPhrase 203) `shouldBe` "Provisional Information"
+    it "204" $
+      (getReasonPhrase 204) `shouldBe` "No Response"
+    it "205" $
+      (getReasonPhrase 205) `shouldBe` "Deleted"
+    it "206" $
+      (getReasonPhrase 206) `shouldBe` "Modified"
+    it "301" $
+      (getReasonPhrase 301) `shouldBe` "Moved Permanently"
+    it "302" $
+      (getReasonPhrase 302) `shouldBe` "Moved Temporarily"
+    it "303" $
+      (getReasonPhrase 303) `shouldBe` "Method"
+    it "304" $
+      (getReasonPhrase 304) `shouldBe` "Not Modified"
+    it "400" $
+      (getReasonPhrase 400) `shouldBe` "Bad Request"
+    it "401" $
+      (getReasonPhrase 401) `shouldBe` "Unauthorized"
+    it "402" $
+      (getReasonPhrase 402) `shouldBe` "Payment Required"
+    it "403" $
+      (getReasonPhrase 403) `shouldBe` "Forbidden"
+    it "404" $
+      (getReasonPhrase 404) `shouldBe` "Not Found"
+    it "405" $
+      (getReasonPhrase 405) `shouldBe` "Method Not Allowed"
+    it "406" $
+      (getReasonPhrase 406) `shouldBe` "None Acceptable"
+    it "407" $
+      (getReasonPhrase 407) `shouldBe` "Proxy Authentication Required"
+    it "408" $
+      (getReasonPhrase 408) `shouldBe` "Request Timeout"
+    it "500" $
+      (getReasonPhrase 500) `shouldBe` "Internal Server Error"
+    it "501" $
+      (getReasonPhrase 501) `shouldBe` "Not Implemented"
+    it "502" $
+      (getReasonPhrase 502) `shouldBe` "Bad Gateway"
+    it "503" $
+      (getReasonPhrase 503) `shouldBe` "Service Unavailable"
+    it "504" $
+      (getReasonPhrase 504) `shouldBe` "Gateway Timeout"
+    it "otherwise" $
+      (getReasonPhrase 505) `shouldBe` ""
+
 
 main :: IO ()
 main = hspec $ do
   specGetServer
   specGetRequestMethod
   specGetRequestPath
+  specGetReasonPhrase
