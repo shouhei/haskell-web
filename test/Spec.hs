@@ -3,7 +3,6 @@ import Test.Hspec
 
 {--
     makeHeader,
-    getReasonPhrase,
     makeStatusLine,
     getContentType,
     notFound,
@@ -90,6 +89,11 @@ specGetReasonPhrase = do
     it "otherwise" $
       (getReasonPhrase 505) `shouldBe` ""
 
+specMakeStatusLine :: Spec
+specMakeStatusLine = do
+  describe "makeStatusLine" $ do
+    it "standard" $
+      makeStatusLine 1.0 200 `shouldBe` "HTTP/1.0 200 OK"
 
 main :: IO ()
 main = hspec $ do
@@ -97,3 +101,4 @@ main = hspec $ do
   specGetRequestMethod
   specGetRequestPath
   specGetReasonPhrase
+  specMakeStatusLine
