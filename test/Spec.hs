@@ -3,11 +3,8 @@ import Test.Hspec
 
 {--
     makeHeader,
-    makeStatusLine,
-    getContentType,
     notFound,
     addHeader
-
 --}
 
 specGetServer :: Spec
@@ -95,6 +92,26 @@ specMakeStatusLine = do
     it "standard" $
       makeStatusLine 1.0 200 `shouldBe` "HTTP/1.0 200 OK"
 
+specGetContentType :: Spec
+specGetContentType = do
+  describe "getContentType" $ do
+    it "html" $
+      getContentType "sample.html" `shouldBe` "text/html;charset=utf-8"
+    it "css" $
+      getContentType "sample.css" `shouldBe` "text/css;charset=utf-8"
+    it "js" $
+      getContentType "sample.js" `shouldBe` "application/x-javascript"
+    it "gif" $
+      getContentType "sample.gif" `shouldBe` "image/gif"
+    it "jpg" $
+      getContentType "sample.jpg" `shouldBe` "image/jpeg"
+    it "jpeg" $
+      getContentType "sample.jpeg" `shouldBe` "image/jpeg"
+    it "png" $
+      getContentType "sample.png" `shouldBe` "image/png"
+    it "otherwise" $
+      getContentType "sample.txt" `shouldBe` "text/plain"
+
 main :: IO ()
 main = hspec $ do
   specGetServer
@@ -102,3 +119,4 @@ main = hspec $ do
   specGetRequestPath
   specGetReasonPhrase
   specMakeStatusLine
+  specGetContentType
