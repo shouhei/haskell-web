@@ -129,7 +129,7 @@ addHeader d c body = do
         ("Accept-Ranges", "bytes"),
         {-- Object Header --}
         ("Content-Type", c),
-        ("Content-length", (show content_length))
+        ("Content-Length", (show content_length))
         ]
   {--Status Line--}
   (makeStatusLine 1.0 200) ++ " \r\n" ++ (makeHeader kv) ++ "\r\n" ++ body
