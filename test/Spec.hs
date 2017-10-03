@@ -1,2 +1,12 @@
+import Lib
+import Test.Hspec
+
+specGetServer :: Spec
+specGetServer = do
+  describe "getServer" $ do
+    it "standard" $
+      getServer `shouldBe` "haskell-web"
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = hspec $ do
+  specGetServer
