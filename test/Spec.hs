@@ -112,6 +112,12 @@ specGetContentType = do
     it "otherwise" $
       getContentType "sample.txt" `shouldBe` "text/plain"
 
+specMakeHeader :: Spec
+specMakeHeader = do
+  describe "makeHeader" $ do
+    it "standard" $
+      makeHeader [("A", "a"), ("B","b")] `shouldBe` "A: a \r\nB: b \r\n"
+
 main :: IO ()
 main = hspec $ do
   specGetServer
@@ -120,3 +126,4 @@ main = hspec $ do
   specGetReasonPhrase
   specMakeStatusLine
   specGetContentType
+  specMakeHeader
