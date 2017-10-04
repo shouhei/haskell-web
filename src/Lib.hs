@@ -110,7 +110,6 @@ notFound d = do
         ("Date", d),
         {--Response Header--}
         ("Server", getServer),
-        ("Accept-Ranges", "bytes"),
         {-- Object Header--}
         ("Content-Length", "0"),
         ("Content-Type", "text/plan;")
@@ -126,7 +125,6 @@ addHeader d c body = do
         ("Date", d),
         {-- Response Header --}
         ("Server", getServer),
-        ("Accept-Ranges", "bytes"),
         {-- Object Header --}
         ("Content-Type", c),
         ("Content-Length", (show content_length))
