@@ -111,6 +111,7 @@ notFound d = do
         {--Response Header--}
         ("Server", getServer),
         {-- Object Header--}
+        ("Content-Language", "ja"),
         ("Content-Length", "0"),
         ("Content-Type", "text/plan;")
         ]
@@ -126,6 +127,7 @@ addHeader d c body = do
         {-- Response Header --}
         ("Server", getServer),
         {-- Object Header --}
+        ("Content-Language", "ja"),
         ("Content-Type", c),
         ("Content-Length", (show content_length))
         ]
