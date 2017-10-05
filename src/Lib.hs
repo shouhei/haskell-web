@@ -25,6 +25,8 @@ import Data.Time
 import Data.List.Split
 import qualified Data.ByteString.Char8 as BS
 import System.IO
+import System.Posix.Files
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 
 serveSocket :: Int -> IO Socket
 serveSocket port_int = do
@@ -118,8 +120,8 @@ notFound d = do
   {-- Status Line --}
   (makeStatusLine 1.0 404) ++ " \r\n" ++ (makeHeader kv) ++ "\n"
 
-addHeader :: String -> String -> String -> String
-addHeader d c body = do
+addHeader :: String -> String -> String -> String -> String
+addHeader d l c body = do
   let content_length = length body
   let kv = [
         {--General Header --}
@@ -128,6 +130,7 @@ addHeader d c body = do
         ("Server", getServer),
         {-- Object Header --}
         ("Content-Language", "ja"),
+        ("Last-Modified", l),
         ("Content-Type", c),
         ("Content-Length", (show content_length))
         ]
@@ -164,8 +167,10 @@ response conn request = do
   handler <- openBinaryFile path ReadMode
   contents <- hGetContents handler
   let today = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S +0900" zt
+  last_modified_epoch <- modificationTime <$> getFileStatus path
+  let last_modified = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S +0900" $ posixSecondsToUTCTime $ realToFrac $ (last_modified_epoch + 32400)
   let c = getContentType path
-  let response_data = addHeader today c contents
+  let response_data = addHeader today last_modified c contents
   sendAllData conn (BS.pack response_data)
   return ()
   `catch` (\(SomeException e) -> do
