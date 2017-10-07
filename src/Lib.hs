@@ -118,7 +118,7 @@ notFound d = do
         ("Content-Type", "text/plan;")
         ]
   {-- Status Line --}
-  (makeStatusLine 1.0 404) ++ " \r\n" ++ (makeHeader kv) ++ "\n"
+  (makeStatusLine 1.0 404) ++ " \r\n" ++ (makeHeader kv) ++ "\r\n"
 
 addHeader :: String -> String -> String -> String -> String
 addHeader d l c body = do
