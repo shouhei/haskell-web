@@ -168,7 +168,7 @@ response conn request = do
   contents <- hGetContents handler
   let today = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S +0900" zt
   last_modified_epoch <- modificationTime <$> getFileStatus path
-  let last_modified = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S +0900" $ posixSecondsToUTCTime $ realToFrac $ (last_modified_epoch + 32400)
+  let last_modified = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S GMT" $ posixSecondsToUTCTime $ realToFrac last_modified_epoch
   let c = getContentType path
   let response_data = addHeader today last_modified c contents
   sendAllData conn (BS.pack response_data)
