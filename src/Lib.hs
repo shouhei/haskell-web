@@ -166,7 +166,8 @@ response conn request = do
   putStrLn $ firstLine ++ " " ++ logDate
   handler <- openBinaryFile path ReadMode
   contents <- hGetContents handler
-  let today = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S +0900" zt
+  let utc = zonedTimeToUTC zt
+  let today = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S GMT" utc
   last_modified_epoch <- modificationTime <$> getFileStatus path
   let last_modified = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S GMT" $ posixSecondsToUTCTime $ realToFrac last_modified_epoch
   let c = getContentType path
@@ -175,8 +176,8 @@ response conn request = do
   return ()
   `catch` (\(SomeException e) -> do
     print e
-    zt <- getZonedTime
-    let today = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S +0900" zt
+    utc <- zonedTimeToUTC <$> getZonedTime
+    let today = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S GMT" utc
     sendAllData conn (BS.pack (notFound today))
     return ()
    )
