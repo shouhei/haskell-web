@@ -108,6 +108,21 @@ makeStatusLine http_version status_code = do
 crlf :: String
 crlf = "\r\n"
 
+methodNotAllowed :: String -> String
+methodNotAllowed d = do
+  let kv =  [
+        {--General Header--}
+        ("Date", d),
+        {--Response Header--}
+        ("Server", getServer),
+        {-- Object Header--}
+        ("Content-Language", "ja"),
+        ("Content-Length", "0"),
+        ("Content-Type", "text/plan;")
+        ]
+  {-- Status Line --}
+  (makeStatusLine 1.0 405) ++ crlf ++ (makeHeader kv) ++ crlf
+
 notFound :: String -> String
 notFound d = do
   let kv =  [
@@ -123,8 +138,8 @@ notFound d = do
   {-- Status Line --}
   (makeStatusLine 1.0 404) ++ crlf ++ (makeHeader kv) ++ crlf
 
-addHeader :: String -> String -> String -> String -> String
-addHeader d l c body = do
+onlyHeader :: String -> String -> String -> String -> String
+onlyHeader d l c body = do
   let content_length = length body
   let kv = [
         {--General Header --}
@@ -138,7 +153,10 @@ addHeader d l c body = do
         ("Content-Length", (show content_length))
         ]
   {--Status Line--}
-  (makeStatusLine 1.0 200) ++ crlf ++ (makeHeader kv) ++ crlf ++ body
+  (makeStatusLine 1.0 200) ++ crlf ++ (makeHeader kv) ++ crlf
+
+addHeader :: String -> String -> String -> String -> String
+addHeader d l c body = (onlyHeader d l c body) ++ body
 
 getContentType :: String -> String
 getContentType file
@@ -174,7 +192,12 @@ response conn request = do
   last_modified_epoch <- modificationTime <$> getFileStatus path
   let last_modified = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S GMT" $ posixSecondsToUTCTime $ realToFrac last_modified_epoch
   let c = getContentType path
-  let response_data = addHeader today last_modified c contents
+  let response_data = if method == "HEAD" then do
+        onlyHeader today last_modified c contents
+        else if method == "GET" then do
+          addHeader today last_modified c contents
+        else do
+          methodNotAllowed today
   sendAllData conn (BS.pack response_data)
   return ()
   `catch` (\(SomeException e) -> do
