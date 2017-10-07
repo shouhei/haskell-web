@@ -14,9 +14,9 @@ specGetServer = do
       getServer `shouldBe` "haskell-web"
 
 exampleRequestHeader :: String
-exampleRequestHeader = do "GET /hogehoge HTTP/1.0 \r\n\
-\hogehogehogehogehoge \r\n\
-\hugahugahugahuga \r\n\n"
+exampleRequestHeader = do "GET /hogehoge HTTP/1.0\r\n\
+\hogehogehogehogehoge\r\n\
+\hugahugahugahuga\r\n\n"
 
 specGetRequestMethod :: Spec
 specGetRequestMethod = do
@@ -116,7 +116,7 @@ specMakeHeader :: Spec
 specMakeHeader = do
   describe "makeHeader" $ do
     it "standard" $
-      makeHeader [("A", "a"), ("B","b")] `shouldBe` "A: a \r\nB: b \r\n"
+      makeHeader [("A", "a"), ("B","b")] `shouldBe` "A: a\r\nB: b\r\n"
 
 main :: IO ()
 main = hspec $ do

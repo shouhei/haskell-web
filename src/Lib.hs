@@ -70,7 +70,7 @@ getRequestPath request = do
 
 makeHeader :: [(String, String)] -> String
 makeHeader kv = do
-  foldl (\x y -> x ++ (fst y) ++ ": " ++ (snd y) ++ " \r\n") "" kv
+  foldl (\x y -> x ++ (fst y) ++ ": " ++ (snd y) ++ crlf) "" kv
 
 getReasonPhrase :: Int -> String
 getReasonPhrase x
@@ -105,6 +105,9 @@ makeStatusLine :: Float -> Int -> String
 makeStatusLine http_version status_code = do
   "HTTP/" ++ (show http_version) ++ " " ++ (show status_code) ++ " " ++ (getReasonPhrase status_code)
 
+crlf :: String
+crlf = "\r\n"
+
 notFound :: String -> String
 notFound d = do
   let kv =  [
@@ -118,7 +121,7 @@ notFound d = do
         ("Content-Type", "text/plan;")
         ]
   {-- Status Line --}
-  (makeStatusLine 1.0 404) ++ " \r\n" ++ (makeHeader kv) ++ "\r\n"
+  (makeStatusLine 1.0 404) ++ crlf ++ (makeHeader kv) ++ crlf
 
 addHeader :: String -> String -> String -> String -> String
 addHeader d l c body = do
@@ -135,7 +138,7 @@ addHeader d l c body = do
         ("Content-Length", (show content_length))
         ]
   {--Status Line--}
-  (makeStatusLine 1.0 200) ++ " \r\n" ++ (makeHeader kv) ++ "\r\n" ++ body
+  (makeStatusLine 1.0 200) ++ crlf ++ (makeHeader kv) ++ crlf ++ body
 
 getContentType :: String -> String
 getContentType file
