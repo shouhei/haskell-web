@@ -33,6 +33,8 @@ executable web-exe
                      , optparse-declarative
                      , mtl
                      , network
+                     , aeson
+                     , bytestring
   default-language:    Haskell2010
 
 test-suite web-test
