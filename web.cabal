@@ -22,6 +22,7 @@ library
                      , split
                      , bytestring
                      , unix
+                     , zlib
   default-language:    Haskell2010
 
 executable web-exe

@@ -11,7 +11,7 @@ module Lib
     makeStatusLine,
     getContentType,
     notFound,
-    addHeader
+    onlyHeader
   )
 where
 
@@ -24,9 +24,12 @@ import Data.IORef
 import Data.Time
 import Data.List.Split
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.Char8 as LBS
 import System.IO
 import System.Posix.Files
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
+import qualified Codec.Compression.GZip as GZip
+import Data.Int as I
 
 serveSocket :: Int -> IO Socket
 serveSocket port_int = do
@@ -138,25 +141,22 @@ notFound d = do
   {-- Status Line --}
   (makeStatusLine 1.0 404) ++ crlf ++ (makeHeader kv) ++ crlf
 
-onlyHeader :: String -> String -> String -> String -> String
-onlyHeader d l c body = do
-  let content_length = length body
+onlyHeader :: String -> String -> String -> I.Int64 -> String
+onlyHeader date last content_type content_length = do
   let kv = [
         {--General Header --}
-        ("Date", d),
+        ("Date", date),
         {-- Response Header --}
         ("Server", getServer),
         {-- Object Header --}
         ("Content-Language", "ja"),
-        ("Last-Modified", l),
-        ("Content-Type", c),
+        ("Content-Encoding", "gzip"),
+        ("Last-Modified", last),
+        ("Content-Type", content_type),
         ("Content-Length", (show content_length))
         ]
   {--Status Line--}
   (makeStatusLine 1.0 200) ++ crlf ++ (makeHeader kv) ++ crlf
-
-addHeader :: String -> String -> String -> String -> String
-addHeader d l c body = (onlyHeader d l c body) ++ body
 
 getContentType :: String -> String
 getContentType file
@@ -193,12 +193,14 @@ response conn request = do
   let last_modified = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S GMT" $ posixSecondsToUTCTime $ realToFrac last_modified_epoch
   let c = getContentType path
   let response_data = if method == "HEAD" then do
-        onlyHeader today last_modified c contents
+        let compressed = GZip.compress $ LBS.pack contents
+        BS.pack $ onlyHeader today last_modified c (LBS.length compressed)
         else if method == "GET" then do
-          addHeader today last_modified c contents
+          let compressed = GZip.compress $ LBS.pack contents
+          LBS.toStrict $ LBS.append (LBS.pack (onlyHeader today last_modified c (LBS.length compressed))) compressed
         else do
-          methodNotAllowed today
-  sendAllData conn (BS.pack response_data)
+          BS.pack $ methodNotAllowed today
+  sendAllData conn response_data
   return ()
   `catch` (\(SomeException e) -> do
     print e
