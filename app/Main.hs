@@ -26,7 +26,7 @@ server c = liftIO $ do
   case decode (BS.pack conf_file) :: Maybe Config of
     Nothing -> print "Parse error"
     Just conf -> do
-      soc <- serveSocket (port conf)
+      soc <- serveSocket (port conf) (allow_host conf)
       listen soc 5
       acceptLoop soc `finally` close soc
 

@@ -31,12 +31,12 @@ import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import qualified Codec.Compression.GZip as GZip
 import Data.Int as I
 
-serveSocket :: Int -> IO Socket
-serveSocket port_int = do
+serveSocket :: Int -> String -> IO Socket
+serveSocket port_int allow_host = do
   let i = (fromIntegral port_int) :: Integer
   let port = (fromInteger i) :: PortNumber
   soc <- socket AF_INET Stream defaultProtocol
-  addr <- inet_addr "0.0.0.0"
+  addr <- inet_addr allow_host
   bind soc (SockAddrInet port addr)
   return soc
 
