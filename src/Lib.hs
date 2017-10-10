@@ -53,7 +53,7 @@ receiveRequestLoop conn = do
     modifyIORef request (++ str)
     if len /= 64 then do
       r <- readIORef request
-      response conn r
+      dispatchRequest conn r
       return ()
     else do
       return ()
@@ -180,8 +180,8 @@ sendAllData conn content
 httpDateFormat :: String
 httpDateFormat = "%a, %d %b %Y %H:%M:%S GMT"
 
-response :: Socket -> String -> IO()
-response conn request = do
+dispatchRequest :: Socket -> String -> IO()
+dispatchRequest conn request = do
   let method = getRequestMethod request
   let path = getRequestPath request
   zt <- getZonedTime
