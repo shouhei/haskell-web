@@ -177,6 +177,9 @@ sendAllData conn content
       let remaining_content = BS.drop send_data content
       sendAllData conn remaining_content
 
+httpDateFormat :: String
+httpDateFormat = "%a, %d %b %Y %H:%M:%S GMT"
+
 response :: Socket -> String -> IO()
 response conn request = do
   let method = getRequestMethod request
@@ -188,9 +191,9 @@ response conn request = do
   handler <- openBinaryFile path ReadMode
   contents <- hGetContents handler
   let utc = zonedTimeToUTC zt
-  let today = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S GMT" utc
+  let today = formatTime defaultTimeLocale httpDateFormat utc
   last_modified_epoch <- modificationTime <$> getFileStatus path
-  let last_modified = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S GMT" $ posixSecondsToUTCTime $ realToFrac last_modified_epoch
+  let last_modified = formatTime defaultTimeLocale httpDateFormat $ posixSecondsToUTCTime $ realToFrac last_modified_epoch
   let c = getContentType path
   let response_data = if method == "HEAD" then do
         let compressed = GZip.compress $ LBS.pack contents
@@ -205,7 +208,7 @@ response conn request = do
   `catch` (\(SomeException e) -> do
     print e
     utc <- zonedTimeToUTC <$> getZonedTime
-    let today = formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S GMT" utc
+    let today = formatTime defaultTimeLocale httpDateFormat utc
     sendAllData conn (BS.pack (notFound today))
     return ()
    )
