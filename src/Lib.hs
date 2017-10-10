@@ -180,8 +180,8 @@ sendAllData conn content
 httpDateFormat :: String
 httpDateFormat = "%a, %d %b %Y %H:%M:%S GMT"
 
-dispatchRequest :: Socket -> String -> IO()
-dispatchRequest conn request = do
+defaultResponseCreator :: String -> IO BS.ByteString
+defaultResponseCreator request = do
   let method = getRequestMethod request
   let path = getRequestPath request
   handler <- openBinaryFile path ReadMode
@@ -191,22 +191,26 @@ dispatchRequest conn request = do
   last_modified_epoch <- modificationTime <$> getFileStatus path
   let last_modified = formatTime defaultTimeLocale httpDateFormat $ posixSecondsToUTCTime $ realToFrac last_modified_epoch
   let c = getContentType path
-  let response_data = if method == "HEAD" then do
-        let compressed = GZip.compress $ LBS.pack contents
-        BS.pack $ onlyHeader today last_modified c (LBS.length compressed)
-        else if method == "GET" then do
-          let compressed = GZip.compress $ LBS.pack contents
-          LBS.toStrict $ LBS.append (LBS.pack (onlyHeader today last_modified c (LBS.length compressed))) compressed
-        else do
-          BS.pack $ methodNotAllowed today
+  if method == "HEAD" then do
+    let compressed = GZip.compress $ LBS.pack contents
+    return $ BS.pack $ onlyHeader today last_modified c (LBS.length compressed)
+  else if method == "GET" then do
+    let compressed = GZip.compress $ LBS.pack contents
+    return $ LBS.toStrict $ LBS.append (LBS.pack (onlyHeader today last_modified c (LBS.length compressed))) compressed
+  else do
+    return $ BS.pack $ methodNotAllowed today
+
+
+dispatchRequest :: Socket -> String -> IO()
+dispatchRequest conn request = do
+  response_data <- defaultResponseCreator request
   sendAllData conn response_data
-  return ()
   `catch` (\(SomeException e) -> do
     print e
     utc <- zonedTimeToUTC <$> getZonedTime
     let today = formatTime defaultTimeLocale httpDateFormat utc
-    sendAllData conn (BS.pack (notFound today))
-    return ()
+    let response_data = (BS.pack (notFound today))
+    sendAllData conn response_data
    )
   `finally` (do
     return ()
