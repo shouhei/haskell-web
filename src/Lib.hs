@@ -188,7 +188,7 @@ getLastModified path = do
 
 today :: IO String
 today = do
-  utc <- zonedTimeToUTC <$> getZonedTime
+  utc <- getCurrentTime
   return $ formatTime defaultTimeLocale httpDateFormat utc
 
 defaultResponseCreator :: String -> IO BS.ByteString
