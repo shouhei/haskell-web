@@ -185,24 +185,29 @@ getLastModified path = do
   last_modified_epoch <- modificationTime <$> getFileStatus path
   return $ formatTime defaultTimeLocale httpDateFormat $ posixSecondsToUTCTime $ realToFrac last_modified_epoch
 
+
+today :: IO String
+today = do
+  utc <- zonedTimeToUTC <$> getZonedTime
+  return $ formatTime defaultTimeLocale httpDateFormat utc
+
 defaultResponseCreator :: String -> IO BS.ByteString
 defaultResponseCreator request = do
   let method = getRequestMethod request
   let path = getRequestPath request
+  let c = getContentType path
   handler <- openBinaryFile path ReadMode
   contents <- hGetContents handler
-  utc <- zonedTimeToUTC <$> getZonedTime
-  let today = formatTime defaultTimeLocale httpDateFormat utc
   last_modified <- getLastModified path
-  let c = getContentType path
+  t <- today
   if method == "HEAD" then do
     let compressed = GZip.compress $ LBS.pack contents
-    return $ BS.pack $ onlyHeader today last_modified c (LBS.length compressed)
+    return $ BS.pack $ onlyHeader t last_modified c (LBS.length compressed)
   else if method == "GET" then do
     let compressed = GZip.compress $ LBS.pack contents
-    return $ LBS.toStrict $ LBS.append (LBS.pack (onlyHeader today last_modified c (LBS.length compressed))) compressed
+    return $ LBS.toStrict $ LBS.append (LBS.pack (onlyHeader t last_modified c (LBS.length compressed))) compressed
   else do
-    return $ BS.pack $ methodNotAllowed today
+    return $ BS.pack $ methodNotAllowed t
 
 
 dispatchRequest :: Socket -> String -> IO()
@@ -211,9 +216,8 @@ dispatchRequest conn request = do
   sendAllData conn response_data
   `catch` (\(SomeException e) -> do
     print e
-    utc <- zonedTimeToUTC <$> getZonedTime
-    let today = formatTime defaultTimeLocale httpDateFormat utc
-    let response_data = (BS.pack (notFound today))
+    t <- today
+    let response_data = (BS.pack (notFound t))
     sendAllData conn response_data
    )
   `finally` (do
