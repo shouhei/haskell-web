@@ -184,13 +184,9 @@ dispatchRequest :: Socket -> String -> IO()
 dispatchRequest conn request = do
   let method = getRequestMethod request
   let path = getRequestPath request
-  zt <- getZonedTime
-  let logDate = formatTime defaultTimeLocale "[%d/%b/%Y %H:%M:%S]" zt
-  let firstLine = init $ (lines request) !! 0
-  putStrLn $ firstLine ++ " " ++ logDate
   handler <- openBinaryFile path ReadMode
   contents <- hGetContents handler
-  let utc = zonedTimeToUTC zt
+  utc <- zonedTimeToUTC <$> getZonedTime
   let today = formatTime defaultTimeLocale httpDateFormat utc
   last_modified_epoch <- modificationTime <$> getFileStatus path
   let last_modified = formatTime defaultTimeLocale httpDateFormat $ posixSecondsToUTCTime $ realToFrac last_modified_epoch
