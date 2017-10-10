@@ -180,6 +180,11 @@ sendAllData conn content
 httpDateFormat :: String
 httpDateFormat = "%a, %d %b %Y %H:%M:%S GMT"
 
+getLastModified :: String -> IO String
+getLastModified path = do
+  last_modified_epoch <- modificationTime <$> getFileStatus path
+  return $ formatTime defaultTimeLocale httpDateFormat $ posixSecondsToUTCTime $ realToFrac last_modified_epoch
+
 defaultResponseCreator :: String -> IO BS.ByteString
 defaultResponseCreator request = do
   let method = getRequestMethod request
@@ -188,8 +193,7 @@ defaultResponseCreator request = do
   contents <- hGetContents handler
   utc <- zonedTimeToUTC <$> getZonedTime
   let today = formatTime defaultTimeLocale httpDateFormat utc
-  last_modified_epoch <- modificationTime <$> getFileStatus path
-  let last_modified = formatTime defaultTimeLocale httpDateFormat $ posixSecondsToUTCTime $ realToFrac last_modified_epoch
+  last_modified <- getLastModified path
   let c = getContentType path
   if method == "HEAD" then do
     let compressed = GZip.compress $ LBS.pack contents
