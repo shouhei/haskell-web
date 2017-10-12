@@ -30,6 +30,7 @@ import System.Posix.Files
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import qualified Codec.Compression.GZip as GZip
 import Data.Int as I
+import Data.List
 
 serveSocket :: Int -> String -> IO Socket
 serveSocket port_int allow_host = do
@@ -66,6 +67,13 @@ getServer = "haskell-web"
 getRequestMethod :: String -> String
 getRequestMethod request = do
   (words $ head $ lines request) !! 0
+
+getTargetHost :: String -> String
+getTargetHost request = do
+  let host = find (\x -> (x !! 0) == "Host") $ map (\x -> splitOn ": " x) (lines request)
+  case host of
+    Nothing -> ""
+    Just x -> x !! 1
 
 getRequestPath :: String -> String
 getRequestPath request = do
@@ -184,7 +192,6 @@ getLastModified :: String -> IO String
 getLastModified path = do
   last_modified_epoch <- modificationTime <$> getFileStatus path
   return $ formatTime defaultTimeLocale httpDateFormat $ posixSecondsToUTCTime $ realToFrac last_modified_epoch
-
 
 today :: IO String
 today = do
